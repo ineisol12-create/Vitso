@@ -409,7 +409,13 @@
       function unlock() {
         if (pwdInput.value.trim().toLowerCase() === 'love') {
           pwdScreen.classList.add('hidden');
+          
+          // Pre-load and unlock audio context for mobile browsers
           audio.load();
+          audio.play().then(() => {
+            audio.pause();
+            audio.currentTime = 0;
+          }).catch(err => console.log("Audio unlocked:", err));
         } else {
           errorMsg.style.display = 'block';
         }
@@ -427,12 +433,12 @@
         } else {
           player.classList.add('playing');
           audio.play().catch(function(err) {
-            console.log("Audio play blocked or file not found:", err);
+            alert("Audio file 'audio.mp3' was not found or is still loading.");
+            console.log("Error playing audio: ", err);
           });
         }
       });
     });
   </script>
 </body>
-  </html>
-  
+</html>
