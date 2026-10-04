@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -129,7 +130,6 @@
       border-bottom: 12px solid #3b506b;
     }
 
-    /* Decorative Stars & Accents */
     .star-top-right {
       position: absolute;
       top: 35px;
@@ -152,7 +152,6 @@
       border-radius: 50%;
     }
 
-    /* Top Subtitle */
     .top-text {
       font-size: 0.85rem;
       color: #7a8b9e;
@@ -163,7 +162,6 @@
       z-index: 2;
     }
 
-    /* Title "our Song..." */
     .title-container {
       position: absolute;
       top: 100px;
@@ -188,7 +186,6 @@
       display: inline-block;
     }
 
-    /* Vinyl / CD Player Section */
     .player-section {
       position: absolute;
       top: 48%;
@@ -200,7 +197,6 @@
       cursor: pointer;
     }
 
-    /* Album Cover */
     .album-cover {
       width: 220px;
       height: 220px;
@@ -225,7 +221,6 @@
       text-shadow: 0 2px 4px rgba(0,0,0,0.6);
     }
 
-    /* CD Disc */
     .cd-disc {
       width: 210px;
       height: 210px;
@@ -258,7 +253,6 @@
       border: 4px solid #b8c4ce;
     }
 
-    /* CD Playing Class (Slide out + Spin) */
     .player-section.playing .cd-disc {
       transform: translateX(85px) !important;
       animation: spin 3s linear infinite;
@@ -270,7 +264,6 @@
       to { transform: translateX(85px) rotate(360deg); }
     }
 
-    /* Bottom Text Content */
     .bottom-content {
       margin-top: auto;
       text-align: center;
@@ -393,9 +386,7 @@
 
   </div>
 
-  <audio id="audio" preload="auto" loop>
-    <source src="audio.mp3" type="audio/mpeg">
-  </audio>
+  <audio id="audio" preload="auto" loop></audio>
 
   <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -406,16 +397,45 @@
       const player = document.getElementById('player');
       const audio = document.getElementById('audio');
 
+      // Smart audio sources fallback list
+      const audioSources = [
+        "audio.mp3",
+        "audio.MP3",
+        "Taylor Swift - You Belong With Me.mp3",
+        "Taylor Swift - You Belong With Me",
+        "am",
+        "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+      ];
+
+      let currentSourceIndex = 0;
+
+      function setAudioSource(index) {
+        if (index < audioSources.length) {
+          audio.src = audioSources[index];
+          audio.load();
+        }
+      }
+
+      audio.addEventListener('error', function() {
+        console.warn("Failed loading source:", audioSources[currentSourceIndex]);
+        currentSourceIndex++;
+        if (currentSourceIndex < audioSources.length) {
+          setAudioSource(currentSourceIndex);
+        }
+      });
+
+      setAudioSource(0);
+
       function unlock() {
         if (pwdInput.value.trim().toLowerCase() === 'love') {
           pwdScreen.classList.add('hidden');
           
-          // Pre-load and unlock audio context for mobile browsers
-          audio.load();
           audio.play().then(() => {
             audio.pause();
             audio.currentTime = 0;
-          }).catch(err => console.log("Audio unlocked:", err));
+          }).catch(err => {
+            console.log("Audio pre-arm:", err);
+          });
         } else {
           errorMsg.style.display = 'block';
         }
@@ -432,13 +452,22 @@
           audio.pause();
         } else {
           player.classList.add('playing');
-          audio.play().catch(function(err) {
-            alert("Audio file 'audio.mp3' was not found or is still loading.");
-            console.log("Error playing audio: ", err);
-          });
+          
+          let playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(function(err) {
+              console.error("Play error, trying fallback...", err);
+              currentSourceIndex++;
+              if (currentSourceIndex < audioSources.length) {
+                setAudioSource(currentSourceIndex);
+                audio.play();
+              }
+            });
+          }
         }
       });
     });
   </script>
 </body>
-</html>
+  </html>
+  
